@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ONE PIXEL — The internet's canvas</title>
+<meta name="description" content="100 million pixels. One shared canvas. Free for everyone. Add your pixel to ONE PIXEL.">
+<meta name="theme-color" content="#3478f6">
+<link rel="icon" type="image/png" href="cubie-preview.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ONE PIXEL">
+<meta property="og:title" content="ONE PIXEL — The internet’s canvas">
+<meta property="og:description" content="100 million pixels. One shared canvas. Free for everyone. Add your little piece.">
+<meta property="og:url" content="https://1-pixel.pages.dev/">
+<meta property="og:image" content="https://1-pixel.pages.dev/cubie-preview.png">
+<meta property="og:image:alt" content="Cubie, the friendly ONE PIXEL mascot, on a bright blue background">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ONE PIXEL — The internet’s canvas">
+<meta name="twitter:description" content="100 million pixels. One shared canvas. Free for everyone.">
+<meta name="twitter:image" content="https://1-pixel.pages.dev/cubie-preview.png">
+<style>
+:root{color-scheme:dark;--blueprint:#0a2342;--blueprint-2:#102f52;--panel:#f4f1ea;--panel-line:#d8d1c4;--ink:#182638;--muted:#657184;--white:#f8fbff;--amber:#e5a83b;--red:#c94c48;--sage:#708b70}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{background:var(--blueprint);color:var(--white);font:14px/1.45 "Segoe UI",Inter,system-ui,-apple-system,sans-serif;letter-spacing:.005em}
+header{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#071a31;border-bottom:1px solid rgba(255,255,255,.18);position:relative;z-index:2}
+.logo{font-size:17px;font-weight:750;letter-spacing:.12em}.logo span{color:var(--amber)}.live{font:600 10px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.12em;color:#dce9f7;border:1px solid #49617b;padding:6px 9px;border-radius:3px;background:#102b49}
+main{height:calc(100dvh - 54px);display:grid;grid-template-columns:292px minmax(0,1fr);grid-template-areas:"controls stage";min-height:420px}.stage{grid-area:stage;position:relative;overflow:hidden;background:var(--blueprint);cursor:crosshair;touch-action:none;border-left:1px solid rgba(255,255,255,.16)}.stage.drag{cursor:grabbing}canvas{display:block;width:100%;height:100%}
+aside{grid-area:controls;background:var(--panel);color:var(--ink);border-right:1px solid var(--panel-line);padding:19px 18px;overflow:auto;box-shadow:5px 0 22px rgba(0,0,0,.08)}
+h1{font-size:19px;line-height:1.2;margin:0 0 5px;font-weight:750;letter-spacing:-.025em}.muted{font-size:12px;color:var(--muted);margin:0 0 12px}.section{padding:14px 0;border-top:1px solid var(--panel-line)}h2{font:700 10px/1.3 ui-monospace,SFMono-Regular,Consolas,monospace;margin:0 0 10px;color:#536176;letter-spacing:.13em;text-transform:uppercase}
+.color-row{display:flex;align-items:center;gap:9px}.color-row input[type=color]{width:48px;height:38px;padding:3px;border:1px solid #c9c3b8;border-radius:3px;background:#fff;cursor:pointer}.color-row input[type=text]{min-width:0;flex:1;height:36px;padding:0 9px;border:1px solid #c9c3b8;border-radius:3px;background:#fff;color:#233247;font:12px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase}
+button{background:#fff;border:1px solid #c9c3b8;color:#243449;border-radius:3px;padding:9px 11px;font:650 12px/1.2 "Segoe UI",system-ui,sans-serif;cursor:pointer;transition:background .12s,border-color .12s}button:hover{background:#e8edf2;border-color:#8c9bab}button:active{background:#dce4ec}.zoom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.zoom button:nth-child(2){background:#e6edf4;border-color:#aab9c8}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#fff;border:1px solid #dcd6ca;border-radius:3px;padding:10px}.stat b{font:650 20px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;display:block;color:#20354d}.stat small{font-size:10px;color:#687486}.bar{height:4px;background:#d9d5cc;overflow:hidden;margin:9px 0 5px}.bar i{display:block;height:100%;width:100%;background:var(--amber)}.note{font-size:11px;color:#687486;line-height:1.5}.status{font-size:11px;min-height:17px;color:#355b7c}.warn{font-size:11px;line-height:1.5;padding:9px 10px;background:#fff;border:1px solid #d8cbb8;border-left:3px solid var(--amber);border-radius:2px;color:#5a5146}
+.hud{position:absolute;left:14px;top:14px;display:flex;gap:7px;flex-wrap:wrap;pointer-events:none}.pill{font:600 10px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.04em;background:rgba(7,26,49,.88);border:1px solid rgba(235,244,255,.35);padding:6px 8px;color:#f5f8fc;border-radius:2px}.empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;background:rgba(7,26,49,.94);border:1px solid rgba(255,255,255,.34);padding:15px 18px;color:#d9e6f3;pointer-events:none;max-width:280px}.empty b{display:block;color:#fff;margin-bottom:4px;font-size:14px;letter-spacing:.02em}
+@media(max-width:760px){header{height:50px;padding:0 14px}.logo{font-size:15px}main{height:calc(100dvh - 50px);grid-template-columns:1fr;grid-template-rows:minmax(220px,1fr) auto;grid-template-areas:"stage" "controls"}.stage{min-height:220px;border-left:0;border-bottom:1px solid rgba(255,255,255,.18)}aside{border:0;border-top:1px solid #d4ccbe;padding:10px 14px;max-height:44dvh;display:grid;grid-template-columns:1fr 1fr;gap:0 12px;box-shadow:0 -5px 18px rgba(0,0,0,.08)}.intro,.wide{grid-column:1/-1}.section{padding:9px 0}.hud{left:8px;top:8px;gap:5px}.pill{font-size:9px;padding:5px 6px}}
+/* Cubie stays; the rest of the interface has stopped auditioning for a startup pitch deck. */
+#loader{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,#123d66,#0a2342 70%);opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease}#loader:before,#loader:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.12);border-radius:50%}#loader:before{width:340px;height:340px;top:-140px;left:-100px}#loader:after{width:430px;height:430px;right:-180px;bottom:-220px}.loader-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:13px;color:#fff;text-align:center;padding:24px}.loader-cubie{width:clamp(108px,25vw,158px);height:clamp(108px,25vw,158px);object-fit:contain;filter:drop-shadow(0 12px 18px rgba(0,0,0,.22));animation:cubie-spin 1.8s linear infinite}.loader-brand{font-size:22px;font-weight:800;letter-spacing:.14em}.loader-caption{font:11px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.08em;color:#c9d8e8}.loader-dots:after{content:"";display:inline-block;width:1.5em;text-align:left;animation:loader-dots 1.2s steps(4,end) infinite}#loader.is-hidden{opacity:0;visibility:hidden;pointer-events:none}@keyframes cubie-spin{to{transform:rotate(360deg)}}@keyframes loader-dots{0%{content:""}25%{content:"."}50%{content:".."}75%,100%{content:"..."}}@media(prefers-reduced-motion:reduce){.loader-cubie,.loader-dots:after{animation:none}#loader{transition:none}}
+</style>
+</head>
+<body>
+<div id="loader" role="status" aria-label="Loading ONE PIXEL">
+ <div class="loader-content">
+  <img class="loader-cubie" src="cubie-preview.png" alt="Cubie">
+  <div class="loader-brand">ONE PIXEL</div>
+  <div class="loader-caption">Getting the canvas ready<span class="loader-dots"></span></div>
+ </div>
+</div>
+<header><div class="logo">ONE PIXEL<span>.</span></div><div class="live" id="connection">CONNECTING…</div></header>
+<main>
+<section class="stage" id="stage" aria-label="Shared pixel canvas">
+<canvas id="canvas"></canvas>
+<div class="hud"><div class="pill" id="zoomLabel">Zoom 100%</div><div class="pill">10,000 × 10,000</div><div class="pill" id="totalHud">Loading pixel count…</div></div>
+<div class="empty" id="empty"><b>One canvas. Everyone.</b>Add your little piece. See what we make together.</div>
+</section>
+<aside>
+<div class="intro"><h1>ONE PIXEL</h1><p class="muted">100 million little chances to create something together.</p></div>
+<div class="section"><h2>Paint color</h2><div class="color-row"><input id="custom" type="color" value="#e5a83b" aria-label="Choose paint color"><input id="hex" type="text" value="#E5A83B" maxlength="7" spellcheck="false" aria-label="HEX color"></div><p class="note">Choose a color or enter a HEX value. Amber is the starting brush.</p></div>
+<div class="section"><h2>Canvas controls</h2><div class="zoom"><button id="out">−</button><button id="reset">Reset</button><button id="in">+</button></div><p class="note">Scroll to zoom toward your pointer. Drag to pan. Pinch to zoom on mobile.</p></div>
+<div class="section wide"><h2>Made by everyone</h2><div class="stats"><div class="stat"><b id="total">—</b><small>Pixels placed</small></div><div class="stat"><b id="cooldown">Ready</b><small>Your next pixel</small></div></div><div class="bar"><i id="bar"></i></div><div class="note">One pixel every 5 seconds per visitor. The server enforces the cooldown.</div><p class="status" id="status" aria-live="polite">Connecting to the shared canvas…</p></div>
+<div class="section wide"><h2>How it works</h2><p class="note">Every visitor paints on the same 10,000 × 10,000 canvas. Pixels are stored centrally and updates appear live. You can replace an existing pixel, but every placement uses your 5-second cooldown.</p><div class="warn">Public launch checklist: enable anonymous sign-in, run the included SQL setup, and add your Supabase project URL and anon key to <code>config.js</code>. Never put a service-role key in the browser.</div></div>
+</aside>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+
+<script>
+(() => {
+const SIZE=10000, BG='#0a2342';
+const $=id=>document.getElementById(id), canvas=$('canvas'), stage=$('stage'), ctx=canvas.getContext('2d',{alpha:false});
+let db=null, user=null, color='#1769FF', zoom=1, ox=0, oy=0, dpr=1, dragging=null, pixels=new Map(), lastPlacedAt=0, cooldownUntil=0, totalCount=0, initialized=false;
+const key=(x,y)=>y*SIZE+x, fmt=n=>Number(n||0).toLocaleString('en-US');
+function hideLoader(){const el=$('loader');if(el)el.classList.add('is-hidden')}
+const loaderFailsafe=setTimeout(hideLoader,9000);
+function say(s){$('status').textContent=s}
+function worldAt(x,y){return{x:Math.floor((x-ox)/zoom),y:Math.floor((y-oy)/zoom)}}
+function bounds(){const w=canvas.clientWidth,h=canvas.clientHeight;return{minX:Math.max(0,Math.floor(-ox/zoom)),minY:Math.max(0,Math.floor(-oy/zoom)),maxX:Math.min(SIZE-1,Math.ceil((w-ox)/zoom)),maxY:Math.min(SIZE-1,Math.ceil((h-oy)/zoom))}}
+function draw(){
+ // Render every pixel from the same floating-point grid transform. Never round
+ // the origin and size separately: that creates overlaps/gaps at fractional zoom.
+ const w=canvas.width/dpr,h=canvas.height/dpr;
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ ctx.fillStyle=BG;ctx.fillRect(0,0,w,h);
+ const b=bounds();
+ if(b.maxX>=b.minX&&b.maxY>=b.minY){
+  ctx.save();
+  ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();
+  for(const p of pixels.values()){
+   if(p.x>=b.minX&&p.x<=b.maxX&&p.y>=b.minY&&p.y<=b.maxY){
+    ctx.fillStyle=p.color;
+    ctx.fillRect(ox+p.x*zoom,oy+p.y*zoom,zoom,zoom);
+   }
+  }
+  // Blueprint grid: fine cell lines when zoomed in, measured major divisions when zoomed out.
+  const step=zoom>=4?1:zoom>=.4?10:zoom>=.04?100:1000;
+  ctx.strokeStyle=zoom>=4?'rgba(242,248,255,.34)':'rgba(242,248,255,.30)';ctx.lineWidth=1;ctx.beginPath();
+  const firstX=Math.ceil(b.minX/step)*step, firstY=Math.ceil(b.minY/step)*step;
+  for(let x=firstX;x<=b.maxX+1;x+=step){const sx=Math.round((ox+x*zoom)*dpr)/dpr+.5/dpr;ctx.moveTo(sx,oy+b.minY*zoom);ctx.lineTo(sx,oy+(b.maxY+1)*zoom)}
+  for(let y=firstY;y<=b.maxY+1;y+=step){const sy=Math.round((oy+y*zoom)*dpr)/dpr+.5/dpr;ctx.moveTo(ox+b.minX*zoom,sy);ctx.lineTo(ox+(b.maxX+1)*zoom,sy)}
+  ctx.stroke();ctx.restore();
+ }
+ $('zoomLabel').textContent='Zoom '+Math.round(zoom*100)+'%';$('total').textContent=fmt(totalCount);$('totalHud').textContent=fmt(totalCount)+' pixels placed';
+}
+function resize(){const r=stage.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);if(!initialized){zoom=Math.min(r.width,r.height)/SIZE;zoom=Math.max(.04,zoom);ox=(r.width-SIZE*zoom)/2;oy=(r.height-SIZE*zoom)/2;initialized=true}draw();if(db)loadVisible()}
+function zoomAt(f,x,y){const p=worldAt(x,y);zoom=Math.max(.04,Math.min(80,zoom*f));ox=x-p.x*zoom;oy=y-p.y*zoom;draw();loadVisibleDebounced()}
+let loadTimer;function loadVisibleDebounced(){clearTimeout(loadTimer);loadTimer=setTimeout(loadVisible,180)}
+async function loadVisible(){if(!db)return;const b=bounds();try{const {data,error}=await db.rpc('get_pixels_in_bounds',{p_min_x:b.minX,p_min_y:b.minY,p_max_x:b.maxX,p_max_y:b.maxY,p_limit:50000});if(error)throw error;for(const p of data||[])pixels.set(key(p.x,p.y),{x:p.x,y:p.y,color:p.color});draw()}catch(e){say('Could not load this canvas area: '+e.message)}}
+async function refreshTotal(){if(!db)return;const {data,error}=await db.rpc('get_pixel_count');if(!error){totalCount=Number(data||0);draw()}}
+async function place(x,y){if(x<0||y<0||x>=SIZE||y>=SIZE)return;if(!db||!user){say('The shared canvas is not connected yet.');return}
+ const now=Date.now();if(now<cooldownUntil){say('Your next pixel is ready in '+Math.ceil((cooldownUntil-now)/1000)+'s.');return}
+ say('Placing your pixel…');const {data,error}=await db.rpc('place_pixel',{p_x:x,p_y:y,p_color:color});
+ if(error){const msg=error.message||'Unknown error';say(msg.toLowerCase().includes('cooldown')?'One pixel every 5 seconds. Please wait a moment.':msg);return}
+ const p=data;pixels.set(key(x,y),{x,y,color:p.color||color});cooldownUntil=Date.now()+5000;lastPlacedAt=Date.now();$('empty').style.display='none';say('Your pixel is live. Everyone can see it.');await refreshTotal();draw();
+}
+function local(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+canvas.addEventListener('wheel',e=>{e.preventDefault();const p=local(e);zoomAt(Math.exp(-e.deltaY*.0015),p.x,p.y)},{passive:false});
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);const p=local(e);dragging={id:e.pointerId,start:p,ox,oy,moved:false};stage.classList.add('drag')});
+canvas.addEventListener('pointermove',e=>{if(!dragging||dragging.id!==e.pointerId)return;const p=local(e),dx=p.x-dragging.start.x,dy=p.y-dragging.start.y;if(Math.abs(dx)+Math.abs(dy)>4)dragging.moved=true;if(dragging.moved){ox=dragging.ox+dx;oy=dragging.oy+dy;draw()}});
+canvas.addEventListener('pointerup',e=>{if(!dragging||dragging.id!==e.pointerId)return;const p=local(e);if(!dragging.moved){const q=worldAt(p.x,p.y);place(q.x,q.y)}dragging=null;stage.classList.remove('drag');loadVisibleDebounced()});
+canvas.addEventListener('pointercancel',()=>{dragging=null;stage.classList.remove('drag')});
+$('in').onclick=()=>zoomAt(1.5,canvas.clientWidth/2,canvas.clientHeight/2);$('out').onclick=()=>zoomAt(1/1.5,canvas.clientWidth/2,canvas.clientHeight/2);
+$('reset').onclick=()=>{const r=stage.getBoundingClientRect();zoom=Math.max(.04,Math.min(r.width,r.height)/SIZE);ox=(r.width-SIZE*zoom)/2;oy=(r.height-SIZE*zoom)/2;draw();loadVisible()};
+function choose(c){if(typeof c!=='string'||!/^#[0-9a-f]{6}$/i.test(c))return;color=c.toUpperCase();$('custom').value=color.toLowerCase();$('hex').value=color}
+$('custom').addEventListener('input',e=>choose(e.target.value));
+$('hex').addEventListener('change',e=>{let v=e.target.value.trim();if(!v.startsWith('#'))v='#'+v;if(/^#[0-9a-f]{6}$/i.test(v))choose(v);else{$('hex').value=color;say('Enter a valid six-digit HEX color.')}});
+function tick(){const remain=Math.max(0,cooldownUntil-Date.now());$('cooldown').textContent=remain?Math.ceil(remain/1000)+'s':'Ready';$('bar').style.width=(100-remain/5000*100)+'%'}
+async function connect(){
+ const cfg=window.ONE_PIXEL_CONFIG||{};if(!cfg.url||!cfg.anonKey||cfg.url.includes('YOUR_')||cfg.anonKey.includes('YOUR_')){$('connection').textContent='SETUP REQUIRED';say('Add your Supabase URL and anon key to config.js, then reload.');hideLoader();return}
+ if(!window.supabase){$('connection').textContent='LIBRARY ERROR';say('Supabase client failed to load. Check your connection.');hideLoader();return}
+ db=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true}});
+ const {data:authData,error:authError}=await db.auth.getSession();if(authError)throw authError;
+ if(!authData.session){const {data,error}=await db.auth.signInAnonymously();if(error)throw error;user=data.user}else user=authData.session.user;
+ $('connection').textContent='SYNCING…';say('Connected. Waiting for live updates…');
+ db.channel('public-pixels').on('postgres_changes',{event:'*',schema:'public',table:'pixels'},payload=>{const p=payload.new;if(p&&Number.isInteger(p.x)&&Number.isInteger(p.y)){pixels.set(key(p.x,p.y),{x:p.x,y:p.y,color:p.color});$('empty').style.display='none';draw();refreshTotal()}}).subscribe(status=>{if(status==='SUBSCRIBED'){$('connection').textContent='LIVE CANVAS';say('Connected. Live updates are on.')}else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){$('connection').textContent='LIVE SYNC ERROR';say('Canvas connected, but live updates are unavailable.')}});
+ await Promise.all([loadVisible(),refreshTotal()]);hideLoader();clearTimeout(loaderFailsafe);
+}
+connect().catch(e=>{$('connection').textContent='CONNECTION ERROR';say('Connection failed: '+e.message);hideLoader();clearTimeout(loaderFailsafe)});
+window.addEventListener('resize',resize);resize();setInterval(tick,150);
+})();
+</script>
+</body></html>
