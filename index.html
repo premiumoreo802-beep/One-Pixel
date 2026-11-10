@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ONE PIXEL — The internet's canvas</title>
+<meta name="description" content="100 million pixels. One shared canvas. Free for everyone.">
+<style>
+:root{--bg:#0d0e12;--panel:#15171d;--line:#2b2e38;--muted:#9ba1af;--accent:#b7a2ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f5f6fa;font:14px/1.45 Inter,system-ui,sans-serif}
+header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#101116;border-bottom:1px solid var(--line)}
+.logo{font-size:19px;font-weight:950;letter-spacing:.13em}.logo span{color:var(--accent)}
+.live{font-size:11px;color:#aef0c4;border:1px solid #28563b;background:#122319;padding:5px 9px;border-radius:99px;font-weight:750}
+main{height:calc(100dvh - 64px);display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:520px}
+.stage{position:relative;overflow:hidden;background:#202127;cursor:grab;touch-action:none}.stage.drag{cursor:grabbing}
+canvas{display:block;width:100%;height:100%}.hud{position:absolute;left:14px;top:14px;display:flex;gap:7px;flex-wrap:wrap;pointer-events:none}
+.pill{font-size:11px;background:#101219eF;border:1px solid #383c48;border-radius:8px;padding:7px 9px;color:#e3e5ed}
+.empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;background:#111319d9;border:1px solid #383c48;border-radius:12px;padding:13px 16px;color:#c6c9d2;pointer-events:none;max-width:260px}
+.empty b{display:block;color:white;margin-bottom:4px}
+aside{background:var(--panel);border-left:1px solid var(--line);padding:18px;overflow:auto}
+h1{font-size:17px;margin:0 0 4px}.muted{font-size:12px;color:var(--muted);margin:0 0 15px}
+.section{padding:15px 0;border-top:1px solid var(--line)}h2{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#b2b7c4;margin:0 0 11px}
+.palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.swatch{height:31px;border-radius:8px;border:2px solid #ffffff20;padding:0;cursor:pointer}.swatch.active{outline:2px solid var(--accent);outline-offset:2px}
+.custom{display:flex;align-items:center;gap:9px;margin-top:12px}.custom input{width:42px;height:34px;padding:0;border:0;background:none}.hex{font:12px ui-monospace,monospace;color:#cbd0da}
+button{background:#22252e;border:1px solid #3a3e49;color:#f4f5fa;border-radius:8px;padding:9px 10px;font-weight:650;cursor:pointer}button:hover{border-color:#8f83c8}
+.zoom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}.zoom button{padding:9px 4px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#1e2129;border:1px solid #303440;border-radius:9px;padding:10px}.stat b{font-size:17px;display:block}.stat small{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.bar{height:6px;background:#292d37;border-radius:99px;overflow:hidden;margin:10px 0 5px}.bar i{display:block;height:100%;width:100%;background:var(--accent)}
+.note{font-size:11px;color:var(--muted);line-height:1.55}.status{font-size:11px;min-height:18px;color:#d6d0ff}
+.warn{font-size:11px;line-height:1.5;padding:10px;background:#211e30;border:1px solid #3d365a;border-radius:9px;color:#d8d0ff}
+@media(max-width:760px){header{height:56px;padding:0 13px}main{height:calc(100dvh - 56px);grid-template-columns:1fr;grid-template-rows:minmax(260px,1fr) auto}.stage{min-height:260px}aside{border-left:0;border-top:1px solid var(--line);padding:12px 14px;max-height:44dvh;display:grid;grid-template-columns:1fr 1fr;gap:0 16px}.intro,.wide{grid-column:1/-1}.section{padding:10px 0}.swatch{height:27px}}
+</style>
+</head>
+<body>
+<header><div class="logo">ONE PIXEL<span>.</span></div><div class="live" id="connection">CONNECTING…</div></header>
+<main>
+<section class="stage" id="stage" aria-label="Shared pixel canvas">
+<canvas id="canvas"></canvas>
+<div class="hud"><div class="pill" id="zoomLabel">Zoom 100%</div><div class="pill">10,000 × 10,000</div><div class="pill" id="totalHud">Loading pixel count…</div></div>
+<div class="empty" id="empty"><b>One canvas. Everyone.</b>Choose a color, zoom in, and place a pixel to join in.</div>
+</section>
+<aside>
+<div class="intro"><h1>Leave your mark.</h1><p class="muted">100 million possible pixels. Free for everyone.</p></div>
+<div class="section"><h2>Choose a color</h2><div class="palette" id="palette"></div><div class="custom"><input id="custom" type="color" value="#1769ff"><span class="hex" id="hex">#1769FF</span></div></div>
+<div class="section"><h2>Canvas controls</h2><div class="zoom"><button id="out">−</button><button id="reset">Reset</button><button id="in">+</button></div><p class="note">Scroll to zoom toward your pointer. Drag to pan. Pinch to zoom on mobile.</p></div>
+<div class="section wide"><h2>Community canvas</h2><div class="stats"><div class="stat"><b id="total">—</b><small>Pixels placed</small></div><div class="stat"><b id="cooldown">Ready</b><small>Your next pixel</small></div></div><div class="bar"><i id="bar"></i></div><div class="note">One pixel every 10 seconds per visitor. The server enforces the cooldown.</div><p class="status" id="status" aria-live="polite">Connecting to the shared canvas…</p></div>
+<div class="section wide"><h2>How it works</h2><p class="note">Every visitor paints on the same 10,000 × 10,000 canvas. Pixels are stored centrally and updates appear live. You can replace an existing pixel, but every placement uses your 10-second cooldown.</p><div class="warn">Public launch checklist: enable anonymous sign-in, run the included SQL setup, and add your Supabase project URL and anon key to <code>config.js</code>. Never put a service-role key in the browser.</div></div>
+</aside>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(() => {
+const SIZE=10000, BG='#F5F5F5', COLORS=['#111111','#FFFFFF','#FF3B30','#FF9500','#FFCC00','#34C759','#00C7BE','#32ADE6','#007AFF','#5856D6','#AF52DE','#FF2D55','#8E8E93','#A2845E','#F5F5F5','#4A4A4A','#9FE870','#FFB8D2'];
+const $=id=>document.getElementById(id), canvas=$('canvas'), stage=$('stage'), ctx=canvas.getContext('2d',{alpha:false});
+let db=null, user=null, color='#1769FF', zoom=1, ox=0, oy=0, dpr=1, dragging=null, pixels=new Map(), lastPlacedAt=0, cooldownUntil=0, totalCount=0, initialized=false;
+const key=(x,y)=>y*SIZE+x, fmt=n=>Number(n||0).toLocaleString('en-US');
+function say(s){$('status').textContent=s}
+function worldAt(x,y){return{x:Math.floor((x-ox)/zoom),y:Math.floor((y-oy)/zoom)}}
+function bounds(){const w=canvas.clientWidth,h=canvas.clientHeight;return{minX:Math.max(0,Math.floor(-ox/zoom)),minY:Math.max(0,Math.floor(-oy/zoom)),maxX:Math.min(SIZE-1,Math.ceil((w-ox)/zoom)),maxY:Math.min(SIZE-1,Math.ceil((h-oy)/zoom))}}
+function draw(){
+ const w=canvas.width/dpr,h=canvas.height/dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#202127';ctx.fillRect(0,0,w,h);
+ const b=bounds();if(b.maxX<b.minX||b.maxY<b.minY)return;
+ ctx.fillStyle=BG;ctx.fillRect(ox+b.minX*zoom,oy+b.minY*zoom,(b.maxX-b.minX+1)*zoom,(b.maxY-b.minY+1)*zoom);
+ if(zoom>=4){ctx.strokeStyle='rgba(0,0,0,.11)';ctx.lineWidth=1;ctx.beginPath();for(let x=b.minX;x<=b.maxX;x++){let sx=Math.round(ox+x*zoom)+.5;ctx.moveTo(sx,oy+b.minY*zoom);ctx.lineTo(sx,oy+(b.maxY+1)*zoom)}for(let y=b.minY;y<=b.maxY;y++){let sy=Math.round(oy+y*zoom)+.5;ctx.moveTo(ox+b.minX*zoom,sy);ctx.lineTo(ox+(b.maxX+1)*zoom,sy)}ctx.stroke()}
+ for(const p of pixels.values()){if(p.x>=b.minX&&p.x<=b.maxX&&p.y>=b.minY&&p.y<=b.maxY){ctx.fillStyle=p.color;ctx.fillRect(Math.floor(ox+p.x*zoom),Math.floor(oy+p.y*zoom),Math.max(1,Math.ceil(zoom)),Math.max(1,Math.ceil(zoom)))}}
+ $('zoomLabel').textContent='Zoom '+Math.round(zoom*100)+'%';$('total').textContent=fmt(totalCount);$('totalHud').textContent=fmt(totalCount)+' pixels placed';
+}
+function resize(){const r=stage.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);if(!initialized){zoom=Math.min(r.width,r.height)/SIZE;zoom=Math.max(.04,zoom);ox=(r.width-SIZE*zoom)/2;oy=(r.height-SIZE*zoom)/2;initialized=true}draw();if(db)loadVisible()}
+function zoomAt(f,x,y){const p=worldAt(x,y);zoom=Math.max(.04,Math.min(80,zoom*f));ox=x-p.x*zoom;oy=y-p.y*zoom;draw();loadVisibleDebounced()}
+let loadTimer;function loadVisibleDebounced(){clearTimeout(loadTimer);loadTimer=setTimeout(loadVisible,180)}
+async function loadVisible(){if(!db)return;const b=bounds();try{const {data,error}=await db.rpc('get_pixels_in_bounds',{p_min_x:b.minX,p_min_y:b.minY,p_max_x:b.maxX,p_max_y:b.maxY,p_limit:50000});if(error)throw error;for(const p of data||[])pixels.set(key(p.x,p.y),{x:p.x,y:p.y,color:p.color});draw()}catch(e){say('Could not load this canvas area: '+e.message)}}
+async function refreshTotal(){if(!db)return;const {data,error}=await db.rpc('get_pixel_count');if(!error){totalCount=Number(data||0);draw()}}
+async function place(x,y){if(x<0||y<0||x>=SIZE||y>=SIZE)return;if(!db||!user){say('The shared canvas is not connected yet.');return}
+ const now=Date.now();if(now<cooldownUntil){say('Your next pixel is ready in '+Math.ceil((cooldownUntil-now)/1000)+'s.');return}
+ say('Placing your pixel…');const {data,error}=await db.rpc('place_pixel',{p_x:x,p_y:y,p_color:color});
+ if(error){const msg=error.message||'Unknown error';say(msg.toLowerCase().includes('cooldown')?'One pixel every 10 seconds. Please wait a moment.':msg);return}
+ const p=data;pixels.set(key(x,y),{x,y,color:p.color||color});cooldownUntil=Date.now()+10000;lastPlacedAt=Date.now();$('empty').style.display='none';say('Your pixel is live. Everyone can see it.');await refreshTotal();draw();
+}
+function local(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+canvas.addEventListener('wheel',e=>{e.preventDefault();const p=local(e);zoomAt(Math.exp(-e.deltaY*.0015),p.x,p.y)},{passive:false});
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);const p=local(e);dragging={id:e.pointerId,start:p,ox,oy,moved:false};stage.classList.add('drag')});
+canvas.addEventListener('pointermove',e=>{if(!dragging||dragging.id!==e.pointerId)return;const p=local(e),dx=p.x-dragging.start.x,dy=p.y-dragging.start.y;if(Math.abs(dx)+Math.abs(dy)>4)dragging.moved=true;if(dragging.moved){ox=dragging.ox+dx;oy=dragging.oy+dy;draw()}});
+canvas.addEventListener('pointerup',e=>{if(!dragging||dragging.id!==e.pointerId)return;const p=local(e);if(!dragging.moved){const q=worldAt(p.x,p.y);place(q.x,q.y)}dragging=null;stage.classList.remove('drag');loadVisibleDebounced()});
+canvas.addEventListener('pointercancel',()=>{dragging=null;stage.classList.remove('drag')});
+$('in').onclick=()=>zoomAt(1.5,canvas.clientWidth/2,canvas.clientHeight/2);$('out').onclick=()=>zoomAt(1/1.5,canvas.clientWidth/2,canvas.clientHeight/2);
+$('reset').onclick=()=>{const r=stage.getBoundingClientRect();zoom=Math.max(.04,Math.min(r.width,r.height)/SIZE);ox=(r.width-SIZE*zoom)/2;oy=(r.height-SIZE*zoom)/2;draw();loadVisible()};
+function choose(c,el){color=c;$('custom').value=c;$('hex').textContent=c.toUpperCase();document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active')}
+COLORS.forEach(c=>{const b=document.createElement('button');b.className='swatch';b.style.background=c;b.title=c;b.setAttribute('aria-label','Choose '+c);b.onclick=()=>choose(c,b);$('palette').appendChild(b)});
+$('custom').addEventListener('input',e=>choose(e.target.value));
+function tick(){const remain=Math.max(0,cooldownUntil-Date.now());$('cooldown').textContent=remain?Math.ceil(remain/1000)+'s':'Ready';$('bar').style.width=(100-remain/10000*100)+'%'}
+async function connect(){
+ const cfg=window.ONE_PIXEL_CONFIG||{};if(!cfg.url||!cfg.anonKey||cfg.url.includes('YOUR_')||cfg.anonKey.includes('YOUR_')){$('connection').textContent='SETUP REQUIRED';say('Add your Supabase URL and anon key to config.js, then reload.');return}
+ if(!window.supabase){$('connection').textContent='LIBRARY ERROR';say('Supabase client failed to load. Check your connection.');return}
+ db=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true}});
+ const {data:authData,error:authError}=await db.auth.getSession();if(authError)throw authError;
+ if(!authData.session){const {data,error}=await db.auth.signInAnonymously();if(error)throw error;user=data.user}else user=authData.session.user;
+ $('connection').textContent='LIVE CANVAS';say('Connected. Loading the shared canvas…');
+ db.channel('public-pixels').on('postgres_changes',{event:'*',schema:'public',table:'pixels'},payload=>{const p=payload.new;if(p&&Number.isInteger(p.x)&&Number.isInteger(p.y)){pixels.set(key(p.x,p.y),{x:p.x,y:p.y,color:p.color});$('empty').style.display='none';draw();refreshTotal()}}).subscribe();
+ await Promise.all([loadVisible(),refreshTotal()]);
+}
+connect().catch(e=>{$('connection').textContent='CONNECTION ERROR';say('Connection failed: '+e.message)});
+window.addEventListener('resize',resize);resize();setInterval(tick,150);
+})();
+</script>
+</body></html>
